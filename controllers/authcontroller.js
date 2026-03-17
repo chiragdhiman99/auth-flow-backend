@@ -18,18 +18,23 @@ const signup = async (req, res) => {
       email,
       password: hashed,
     });
+
     const token = jwt.sign({ id: user1._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
-       await sendEmail(
-    email,
-    'Welcome to AuthApp!',
-    `<h1>Welcome ${name}!</h1><p>Your account has been created successfully.</p>`
-)
-    return res
-      .status(201)
-      .json({ message: "User created successfully", token });
-   
+
+    try {
+      await sendEmail(
+        email,
+        'Welcome to AuthApp!',
+        `<h1>Welcome ${name}!</h1><p>Your account has been created successfully.</p>`
+      )
+    } catch (emailError) {
+      console.log('Email failed:', emailError.message)
+    }
+
+    return res.status(201).json({ message: "User created successfully", token });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -44,7 +49,6 @@ const login = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Google account se normal login block karo
     if (!user.password) {
       return res.status(400).json({ message: "Please login with Google" });
     }
@@ -53,9 +57,11 @@ const login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
+
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
+
     return res.status(200).json({ message: "Login successful", token });
   } catch (error) {
     console.error(error);
@@ -64,18 +70,14 @@ const login = async (req, res) => {
 };
 
 const getMe = async (req, res) => {
-    try {
-        const token = req.headers.authorization?.split(' ')[1]
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        const user = await User.findById(decoded.id).select('-password')
-        res.status(200).json(user)
-    } catch (error) {
-        res.status(401).json({ message: 'Invalid token' })
-    }
+  try {
+    const token = req.headers.authorization?.split(' ')[1]
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const user = await User.findById(decoded.id).select('-password')
+    res.status(200).json(user)
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid token' })
+  }
 }
 
-
-
-
-module.exports = { signup, login, getMe }
-
+module.exports = { signup, login, getMe };
