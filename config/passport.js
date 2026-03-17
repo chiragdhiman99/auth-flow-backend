@@ -8,31 +8,32 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:5000/api/auth/google/callback",
+      callbackURL:
+        "https://auth-app-backend-09tp.onrender.com/api/auth/google/callback",
     },
-   async (accessToken, refreshToken, profile, done) => {
-  try {
-      const user = await User.findOne({ email: profile.emails[0].value });
-      if (user) {
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const user = await User.findOne({ email: profile.emails[0].value });
+        if (user) {
           return done(null, user);
-      } else {
+        } else {
           const newUser = await User.create({
-              name: profile.displayName,
-              email: profile.emails[0].value,
-              avatar: profile.photos[0].value,
-              googleId: profile.id,
+            name: profile.displayName,
+            email: profile.emails[0].value,
+            avatar: profile.photos[0].value,
+            googleId: profile.id,
           });
-            await sendEmail(
-        profile.emails[0].value,
-        'Welcome to AuthApp!',
-        `<h1>Welcome ${profile.displayName}!</h1><p>Your account has been created successfully.</p>`
-    )
+          await sendEmail(
+            profile.emails[0].value,
+            "Welcome to AuthApp!",
+            `<h1>Welcome ${profile.displayName}!</h1><p>Your account has been created successfully.</p>`,
+          );
           return done(null, newUser);
+        }
+      } catch (error) {
+        return done(error, null);
       }
-  } catch (error) {
-      return done(error, null)
-  }
-}
+    },
   ),
 );
 
