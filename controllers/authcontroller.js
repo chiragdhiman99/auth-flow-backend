@@ -43,6 +43,12 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Google account se normal login block karo
+    if (!user.password) {
+      return res.status(400).json({ message: "Please login with Google" });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -56,7 +62,6 @@ const login = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 const getMe = async (req, res) => {
     try {
